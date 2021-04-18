@@ -9,6 +9,8 @@ use Illuminate\Support\Stringable;
 use IsaEken\Alo\Exceptions\FileNotExistsException;
 use Microsoft\PhpParser\Node;
 use Microsoft\PhpParser\Parser;
+use Spatie\Regex\MatchResult;
+use Spatie\Regex\Regex;
 
 class Merger
 {
@@ -67,7 +69,6 @@ class Merger
                     }
 
                     $cwd = getcwd();
-
                     $current_file_path = !($current_file_path instanceof Stringable) ? Str::of($current_file_path) : $current_file_path;
                     $path = $path
                         ->replace("__FILE__", "\"" . $current_file_path . "\"")
@@ -90,6 +91,23 @@ class Merger
                     }
 
                     $_contents = $_contents->append($contents->substr($descendant->getFullStart() + $descendant->getFullWidth()));
+
+                    $regex = new Regex();
+                    $_contents = Str::of($regex->replace("/%- include (.*) -%/", function (MatchResult $result) use ($cwd, $namespace, $path, $current_file_path) {
+                        $path = Str::of($result->group(1))
+                            ->replace("__FILE__", "\"" . $current_file_path . "\"")
+                            ->replace("__DIR__", "\"" . Str::of($path)->beforeLast(DIRECTORY_SEPARATOR) . "\"")
+                            ->replace("__NAMESPACE__", $namespace === null ? null : "\"$namespace\"")
+                            ->replace("\\", "\\\\");
+
+                        $path = realpath(eval("return " . $path . ";"));
+
+                        if (! file_exists($path)) {
+                            throw new FileNotExistsException;
+                        }
+
+                        return file_get_contents($path);
+                    }, $_contents)->result());
                     $contents = $_contents;
 
                     break;
