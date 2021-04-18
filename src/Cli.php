@@ -1,0 +1,123 @@
+<?php
+
+
+namespace IsaEken\Alo;
+
+
+use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
+use Illuminate\Support\Stringable;
+
+class Cli
+{
+    /**
+     * @var Alo $alo
+     */
+    public Alo $alo;
+
+    /**
+     * @var Collection $arguments
+     */
+    public Collection $arguments;
+
+    /**
+     * @var Collection $options
+     */
+    public Collection $options;
+
+    /**
+     * @param array|Collection $argv
+     */
+    public function collectArgv(array|Collection $argv): void
+    {
+        $arguments = $argv instanceof Collection ? $argv : collect($argv);
+        $options = new Collection;
+        $remove_arguments = collect();
+
+        foreach ($arguments as $key => $argument) {
+            if (Str::of($argument)->startsWith("--")) {
+                $options->add($argument);
+                $remove_arguments->add($key);
+            }
+        }
+
+        $this->arguments = $arguments->filter(fn ($argument, $key) => !in_array($key, $remove_arguments->toArray()));
+        $this->options = new Collection;
+
+        foreach ($options as $option) {
+            $option = Str::of($option)->substr(2);
+            $key = null;
+
+            if ($option->contains("=")) {
+                $key = $option->before("=");
+                $option = $option->after("=");
+            }
+
+            if ($key instanceof Stringable) {
+                if ($option instanceof Stringable) {
+                    $opt = $option->lower()->trim()->replace(" ", null);
+                    if ($opt == "true") {
+                        $option = true;
+                    }
+                    else if ($opt == "false") {
+                        $option = false;
+                    }
+                }
+
+                $this->options->put($key->__toString(), $option);
+            }
+            else if ($option instanceof Stringable) {
+                $this->options->put($option->__toString(), null);
+            }
+            else {
+                $this->options->add($option);
+            }
+        }
+    }
+
+    /**
+     * @param Alo $alo
+     * @param array|Collection $argv
+     * @return Cli
+     * @throws Exceptions\DirectoryNotExistsException
+     * @throws Exceptions\FileNotExistsException
+     */
+    public function route(Alo $alo, array|Collection $argv): Cli
+    {
+        $this->alo = $alo;
+        $this->collectArgv($argv);
+
+        foreach ($this->options as $option => $value) {
+            switch ($option) {
+                case "auto-merge-requires":
+                    $this->alo->auto_merge_requires = $value === null || ($value instanceof Stringable && $value->length() < 1) || $value;
+                    break;
+
+                case "help":
+                    $this->help();
+                    exit(0);
+            }
+        }
+
+        if ($this->arguments->count() < 3) {
+            $this->help();
+            exit(1);
+        }
+
+        $this->alo->project_path = Str::of($this->arguments[0]);
+        $this->alo->main_file = Str::of($this->arguments[1]);
+        $this->alo->output = Str::of($this->arguments[2]);
+
+        $this->alo->run();
+
+        return $this;
+    }
+
+    public function help(): void
+    {
+        print "\r\n";
+        print "[All In One Compiler]\r\n";
+        print "aol.php </path/of/your/project> <index.php> <out.php> [--auto-merge-requires]";
+        print "\r\n\r\n";
+    }
+}
