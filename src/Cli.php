@@ -26,6 +26,41 @@ class Cli
     public Collection $options;
 
     /**
+     * @var bool $watch
+     */
+    public bool $watch = false;
+
+    /**
+     * @param Stringable|string $directory
+     * @return string
+     */
+    private function hashDirectory(Stringable|string $directory): string
+    {
+        $directory = !($directory instanceof Stringable) ? Str::of($directory) : $directory;
+
+        if (! is_dir($directory)) {
+            return false;
+        }
+
+        $hash = array();
+        $dir = dir($directory);
+
+        while (false !== ($entry = $dir->read())) {
+            if ($entry != "." && $entry != "..") {
+                if (is_dir($directory . DIRECTORY_SEPARATOR . $entry)) {
+                    $hash[] = $this->hashDirectory($directory . DIRECTORY_SEPARATOR . $entry);
+                }
+                else {
+                    $hash[] = md5_file($directory . DIRECTORY_SEPARATOR . $entry);
+                }
+            }
+        }
+
+        $dir->close();
+        return md5(implode("", $hash));
+    }
+
+    /**
      * @param array|Collection $argv
      */
     public function collectArgv(array|Collection $argv): void
@@ -93,6 +128,10 @@ class Cli
                     $this->alo->auto_merge_requires = $value === null || ($value instanceof Stringable && $value->length() < 1) || $value;
                     break;
 
+                case "watch":
+                    $this->watch = $value === null || ($value instanceof Stringable && $value->length() < 1) || $value;
+                    break;
+
                 case "help":
                     $this->help();
                     exit(0);
@@ -108,7 +147,34 @@ class Cli
         $this->alo->main_file = Str::of($this->arguments[1]);
         $this->alo->output = Str::of($this->arguments[2]);
 
-        $this->alo->run();
+        if (! $this->watch) {
+            $this->alo->run();
+        }
+        else {
+            $tempDirectory = __DIR__ . DIRECTORY_SEPARATOR . ".." . DIRECTORY_SEPARATOR . "tmp";
+            if (! is_dir($tempDirectory)) {
+                mkdir($tempDirectory);
+            }
+
+            $hashFile = $tempDirectory . DIRECTORY_SEPARATOR . "last_directory_hash";
+            if (! file_exists($hashFile)) {
+                touch($hashFile);
+            }
+
+            print "\r\n[ Watching File Changes For Auto Compile ]\r\n";
+
+            while (true) {
+                $hash = $this->hashDirectory($this->alo->project_path);
+                if (file_get_contents($hashFile) != $hash) {
+                    print "Compiling...\r\n";
+
+                    $this->alo->run();
+                    file_put_contents($hashFile, $hash);
+                }
+
+                sleep(0.5);
+            }
+        }
 
         return $this;
     }
