@@ -36,36 +36,6 @@ class Cli
     public bool $watch = false;
 
     /**
-     * @param Stringable|string $directory
-     * @return string
-     */
-    private function hashDirectory(Stringable|string $directory): string
-    {
-        $directory = !($directory instanceof Stringable) ? Str::of($directory) : $directory;
-
-        if (! is_dir($directory)) {
-            return false;
-        }
-
-        $hash = array();
-        $dir = dir($directory);
-
-        while (false !== ($entry = $dir->read())) {
-            if ($entry != "." && $entry != "..") {
-                if (is_dir($directory . DIRECTORY_SEPARATOR . $entry)) {
-                    $hash[] = $this->hashDirectory($directory . DIRECTORY_SEPARATOR . $entry);
-                }
-                else {
-                    $hash[] = md5_file($directory . DIRECTORY_SEPARATOR . $entry);
-                }
-            }
-        }
-
-        $dir->close();
-        return md5(implode("", $hash));
-    }
-
-    /**
      * @param array|Collection $argv
      */
     public function collectArgv(array|Collection $argv): void
@@ -165,7 +135,7 @@ class Cli
             print "\r\n[ Watching File Changes For Auto Compile ]\r\n";
 
             while (true) {
-                $hash = $this->hashDirectory($this->alo->project_path);
+                $hash = Helpers::hashDirectory($this->alo->project_path);
                 if (file_get_contents($hashFile) != $hash) {
                     print "Compiling...\r\n";
 
