@@ -4,9 +4,10 @@
 namespace IsaEken\Alo;
 
 
+use Exception;
 use Illuminate\Support\Str;
 use Illuminate\Support\Stringable;
-use IsaEken\Alo\Exceptions\FileNotExistsException;
+use IsaEken\Alo\Exceptions\FileNotFoundException;
 use Microsoft\PhpParser\Node;
 use Microsoft\PhpParser\Parser;
 use Spatie\Regex\MatchResult;
@@ -31,7 +32,7 @@ class Merger
     /**
      * @param Stringable|string $file_path
      * @return Stringable
-     * @throws FileNotExistsException
+     * @throws FileNotFoundException
      */
     private function loadFileContents(Stringable|string $file_path): Stringable
     {
@@ -70,7 +71,8 @@ class Merger
      * @param Stringable $contents
      * @param Stringable|string|null $current_file_path
      * @return Stringable
-     * @throws FileNotExistsException
+     * @throws FileNotFoundException
+     * @throws Exception
      */
     private function mergeFirstScriptInclusion(Stringable $contents, Stringable|string $current_file_path = null): Stringable
     {
@@ -116,7 +118,7 @@ class Merger
                     chdir($cwd);
 
                     if (! file_exists($path)) {
-                        throw new FileNotExistsException;
+                        throw new FileNotFoundException(null, 0, null, $path);
                     }
 
                     $_contents = $_contents->append("?>", $this->loadFileContents($path));
@@ -153,7 +155,7 @@ class Merger
             $path = realpath(eval("return " . $path . ";"));
 
             if (! file_exists($path)) {
-                throw new FileNotExistsException;
+                throw new FileNotFoundException(null, 0, null, $path);
             }
 
             return file_get_contents($path);
@@ -172,7 +174,7 @@ class Merger
 
     /**
      * @return Merger
-     * @throws FileNotExistsException
+     * @throws FileNotFoundException
      */
     public function merge(): Merger
     {

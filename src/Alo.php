@@ -6,8 +6,8 @@ namespace IsaEken\Alo;
 
 use Illuminate\Support\Str;
 use Illuminate\Support\Stringable;
-use IsaEken\Alo\Exceptions\DirectoryNotExistsException;
-use IsaEken\Alo\Exceptions\FileNotExistsException;
+use IsaEken\Alo\Exceptions\DirectoryNotFoundException;
+use IsaEken\Alo\Exceptions\FileNotFoundException;
 
 /**
  * Class Alo
@@ -36,8 +36,8 @@ class Alo
     public string|Stringable $contents;
 
     /**
-     * @throws DirectoryNotExistsException
-     * @throws FileNotExistsException
+     * @throws DirectoryNotFoundException
+     * @throws FileNotFoundException
      */
     public function run()
     {
@@ -54,7 +54,7 @@ class Alo
         }
 
         if (! is_dir(realpath($this->project_path->__toString()))) {
-            throw new DirectoryNotExistsException;
+            throw new DirectoryNotFoundException(null, 0, null, $this->project_path->__toString());
         }
         else {
             $this->project_path = Str::of(realpath($this->project_path->__toString()));
@@ -62,7 +62,7 @@ class Alo
 
         if (! file_exists($this->main_file)) {
             if (! file_exists($this->project_path->append(DIRECTORY_SEPARATOR, $this->main_file))) {
-                throw new FileNotExistsException;
+                throw new FileNotFoundException(null, 0, null, $this->project_path->__toString());
             }
             else {
                 $this->main_file = $this->project_path->append(DIRECTORY_SEPARATOR, $this->main_file);

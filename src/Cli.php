@@ -4,11 +4,10 @@
 namespace IsaEken\Alo;
 
 
-use Exception;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Illuminate\Support\Stringable;
-use IsaEken\Alo\Exceptions\DirectoryNotExistsException;
+use IsaEken\Alo\Exceptions\DirectoryNotFoundException;
 
 /**
  * Class Cli
@@ -40,8 +39,8 @@ class Cli
      * @param Alo $alo
      * @param array|Collection $argv
      * @return Cli
-     * @throws Exceptions\DirectoryNotExistsException
-     * @throws Exceptions\FileNotExistsException
+     * @throws Exceptions\DirectoryNotFoundException
+     * @throws Exceptions\FileNotFoundException
      */
     public function route(Alo $alo, array|Collection $argv): Cli
     {
@@ -73,7 +72,7 @@ class Cli
         $this->alo->output = Str::of($this->arguments[2]);
 
         if (! is_dir(realpath($this->alo->project_path->__toString()))) {
-            throw new DirectoryNotExistsException;
+            throw new DirectoryNotFoundException(null, 0, null, $this->alo->project_path->__toString());
         }
         else {
             $this->alo->project_path = Str::of(realpath($this->alo->project_path->__toString()));
