@@ -109,11 +109,13 @@ class Cli
         return $this;
     }
 
+    /**
+     * Write help text to CLI
+     */
     public function help(): void
     {
-        print "\r\n";
-        print "[All In One Compiler]\r\n";
-        print "aol.php </path/of/your/project> <index.php> <out.php> [--auto-merge-requires]";
-        print "\r\n\r\n";
+        print "\033[32m[ All In One Compiler ]\033[37m\r\n";
+        Helpers::output("Usage:");
+        Helpers::output("/bin/php alo.php /path/of/your/project your_index_file.php output_file.php [--watch=true|false]");
     }
 }
