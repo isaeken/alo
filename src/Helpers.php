@@ -47,6 +47,8 @@ class Helpers
     }
 
     /**
+     * Print message with hour for CLI.
+     *
      * @param string|Stringable $message
      * @return Stringable
      */
@@ -58,6 +60,8 @@ class Helpers
     }
 
     /**
+     * Group argv to arguments and options.
+     *
      * @param array|Collection $argv
      * @return object
      */
