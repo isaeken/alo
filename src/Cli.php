@@ -4,6 +4,7 @@
 namespace IsaEken\Alo;
 
 
+use Exception;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Illuminate\Support\Stringable;
@@ -172,7 +173,13 @@ class Cli
                 if (file_get_contents($hashFile) != $hash) {
                     print "Compiling...\r\n";
 
-                    $this->alo->run();
+                    try {
+                        $this->alo->run();
+                    }
+                    catch (Exception $exception) {
+                        print "[ ERR ] " . $exception->getCode() . ": " .$exception->getMessage() . "\r\n";
+                    }
+
                     file_put_contents($hashFile, $hash);
                 }
 
