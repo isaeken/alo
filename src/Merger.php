@@ -35,6 +35,10 @@ class Merger
      */
     private function loadFileContents(Stringable|string $file_path): Stringable
     {
+        if (!($file_path instanceof Stringable)) {
+            $file_path = Str::of($file_path);
+        }
+
         $contents = Str::of(file_get_contents($file_path));
         $parser = new Parser;
         $ast_node = $parser->parseSourceFile($contents);
@@ -47,7 +51,7 @@ class Merger
             }
         }
 
-        return $contents;
+        return $this->customInclusion($contents, $file_path);
     }
 
     /**
@@ -122,23 +126,6 @@ class Merger
                     }
 
                     $_contents = $_contents->append($contents->substr($descendant->getFullStart() + $descendant->getFullWidth()));
-
-                    $regex = new Regex();
-                    $_contents = Str::of($regex->replace("/%- include (.*) -%/", function (MatchResult $result) use ($cwd, $namespace, $path, $current_file_path) {
-                        $path = Str::of($result->group(1))
-                            ->replace("__FILE__", "\"" . $current_file_path . "\"")
-                            ->replace("__DIR__", "\"" . Str::of($path)->beforeLast(DIRECTORY_SEPARATOR) . "\"")
-                            ->replace("__NAMESPACE__", $namespace === null ? null : "\"$namespace\"")
-                            ->replace("\\", "\\\\");
-
-                        $path = realpath(eval("return " . $path . ";"));
-
-                        if (! file_exists($path)) {
-                            throw new FileNotExistsException;
-                        }
-
-                        return file_get_contents($path);
-                    }, $_contents)->result());
                     $contents = $_contents;
 
                     break;
@@ -147,6 +134,30 @@ class Merger
         }
 
         return $contents;
+    }
+
+    /**
+     * @param Stringable $contents
+     * @param Stringable $current_file_path
+     * @return Stringable
+     */
+    private function customInclusion(Stringable $contents, Stringable $current_file_path): Stringable
+    {
+        return Str::of((new Regex)->replace("/%- include (.*) -%/", function (MatchResult $result) use ($current_file_path) {
+            $path = Str::of($result->group(1))
+                ->replace("__FILE__", "\"" . $current_file_path . "\"")
+                ->replace("__DIR__", "\"" . Str::of($current_file_path)->beforeLast(DIRECTORY_SEPARATOR) . "\"")
+                ->replace("__NAMESPACE__", null)
+                ->replace("\\", "\\\\");
+
+            $path = realpath(eval("return " . $path . ";"));
+
+            if (! file_exists($path)) {
+                throw new FileNotExistsException;
+            }
+
+            return file_get_contents($path);
+        }, $contents->__toString())->result());
     }
 
     /**
