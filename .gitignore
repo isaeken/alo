@@ -3,5 +3,4 @@
 /vendor
 /tmp
 composer.lock
-output.php
 .phpunit.result.cache

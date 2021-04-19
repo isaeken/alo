@@ -33,7 +33,7 @@
     }
   },
   "scripts": {
-    "compile": "php bin/alo.php ./test index.php output.php",
+    "compile": "php bin/alo.php ./tests/example_project index.php ./tests/example_project/compiled.php",
     "test": ".\\vendor\\bin\\phpunit"
   },
   "require": {

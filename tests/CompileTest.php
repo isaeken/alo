@@ -8,18 +8,70 @@ use PHPUnit\Framework\TestCase;
 
 class CompileTest extends TestCase
 {
-    public function testBasic()
+    public function testInclude()
     {
         $alo = new Alo;
-        $alo->auto_merge_requires = true;
-        $alo->project_path = Str::of(__DIR__ . "/../test");
-        $alo->main_file = Str::of("index.php");
-        $alo->output = Str::of("output.php");
+        $alo->project_path = __DIR__ . DIRECTORY_SEPARATOR . "tests";
+        $alo->main_file = $alo->project_path . DIRECTORY_SEPARATOR . "include.php";
+        $alo->output = $alo->project_path . DIRECTORY_SEPARATOR . "include.php.result";
         $alo->run();
-        $contents = file_get_contents(__DIR__ . "/../output.php");
+        $this->assertStringContainsString("Lorem ipsum dolor sit amet", file_get_contents($alo->output));
+    }
 
-        $this->assertStringContainsString("HEADER", $contents);
-        $this->assertStringContainsString("HOME", $contents);
-        $this->assertStringContainsString("FOOTER", $contents);
+    public function testIncludeOnce()
+    {
+        $alo = new Alo;
+        $alo->project_path = __DIR__ . DIRECTORY_SEPARATOR . "tests";
+        $alo->main_file = $alo->project_path . DIRECTORY_SEPARATOR . "include_once.php";
+        $alo->output = $alo->project_path . DIRECTORY_SEPARATOR . "include_once.php.result";
+        $alo->run();
+        $this->assertStringContainsString("Lorem ipsum dolor sit amet", file_get_contents($alo->output));
+    }
+
+    public function testRequire()
+    {
+        $alo = new Alo;
+        $alo->project_path = __DIR__ . DIRECTORY_SEPARATOR . "tests";
+        $alo->main_file = $alo->project_path . DIRECTORY_SEPARATOR . "require.php";
+        $alo->output = $alo->project_path . DIRECTORY_SEPARATOR . "require.php.result";
+        $alo->run();
+        $this->assertStringContainsString("Lorem ipsum dolor sit amet", file_get_contents($alo->output));
+    }
+
+    public function testRequireOnce()
+    {
+        $alo = new Alo;
+        $alo->project_path = __DIR__ . DIRECTORY_SEPARATOR . "tests";
+        $alo->main_file = $alo->project_path . DIRECTORY_SEPARATOR . "require_once.php";
+        $alo->output = $alo->project_path . DIRECTORY_SEPARATOR . "require_once.php.result";
+        $alo->run();
+        $this->assertStringContainsString("Lorem ipsum dolor sit amet", file_get_contents($alo->output));
+    }
+
+    public function testCustomInclude()
+    {
+        $alo = new Alo;
+        $alo->project_path = __DIR__ . DIRECTORY_SEPARATOR . "tests";
+        $alo->main_file = $alo->project_path . DIRECTORY_SEPARATOR . "custom.php";
+        $alo->output = $alo->project_path . DIRECTORY_SEPARATOR . "custom.php.result";
+        $alo->run();
+        $this->assertStringContainsString("Lorem ipsum dolor sit amet", file_get_contents($alo->output));
+    }
+
+    public function testExampleProject()
+    {
+        $alo = new Alo;
+        $alo->project_path = __DIR__ . "/example_project";
+        $alo->main_file = "index.php";
+        $alo->output = __DIR__ . "/example_project/compiled.php";
+        $alo->run();
+
+        $contents = file_get_contents($alo->output);
+
+        $this->assertStringContainsString("Hello,", $contents);
+        $this->assertStringContainsString("background-color: #111111", $contents);
+        $this->assertStringContainsString("<header>", $contents);
+        $this->assertStringContainsString("<footer>", $contents);
+        $this->assertStringContainsString("if (\$page ==", $contents);
     }
 }
