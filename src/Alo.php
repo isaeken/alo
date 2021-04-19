@@ -9,6 +9,10 @@ use Illuminate\Support\Stringable;
 use IsaEken\Alo\Exceptions\DirectoryNotExistsException;
 use IsaEken\Alo\Exceptions\FileNotExistsException;
 
+/**
+ * Class Alo
+ * @package IsaEken\Alo
+ */
 class Alo
 {
     /**

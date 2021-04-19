@@ -12,12 +12,27 @@ use Microsoft\PhpParser\Parser;
 use Spatie\Regex\MatchResult;
 use Spatie\Regex\Regex;
 
+/**
+ * Class Merger
+ * @package IsaEken\Alo
+ */
 class Merger
 {
+    /**
+     * @var Alo $alo
+     */
     public Alo $alo;
 
+    /**
+     * @var Stringable $contents
+     */
     public Stringable $contents;
 
+    /**
+     * @param Stringable|string $file_path
+     * @return Stringable
+     * @throws FileNotExistsException
+     */
     private function loadFileContents(Stringable|string $file_path): Stringable
     {
         $contents = Str::of(file_get_contents($file_path));
@@ -35,6 +50,11 @@ class Merger
         return $contents;
     }
 
+    /**
+     * @param Stringable $contents
+     * @param int $position
+     * @return bool
+     */
     private function isPhpOpened(Stringable $contents, int $position): bool
     {
         $parser = new Parser;
@@ -42,7 +62,13 @@ class Merger
         return !$ast_node->getDescendantNodeAtPosition($position) instanceof Node\Statement\InlineHtml;
     }
 
-    private function mergeFirstScriptInclusion(Stringable $contents, Stringable|string $current_file_path = null)
+    /**
+     * @param Stringable $contents
+     * @param Stringable|string|null $current_file_path
+     * @return Stringable
+     * @throws FileNotExistsException
+     */
+    private function mergeFirstScriptInclusion(Stringable $contents, Stringable|string $current_file_path = null): Stringable
     {
         $parser = new Parser;
         $ast_node = $parser->parseSourceFile($contents);
@@ -123,12 +149,20 @@ class Merger
         return $contents;
     }
 
+    /**
+     * Merger constructor.
+     * @param Alo $alo
+     */
     public function __construct(Alo $alo)
     {
         $this->alo = $alo;
         $this->contents = $this->alo->contents;
     }
 
+    /**
+     * @return Merger
+     * @throws FileNotExistsException
+     */
     public function merge(): Merger
     {
         $this->contents = $this->loadFileContents($this->alo->main_file);
