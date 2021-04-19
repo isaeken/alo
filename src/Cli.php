@@ -8,6 +8,7 @@ use Exception;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Illuminate\Support\Stringable;
+use IsaEken\Alo\Exceptions\DirectoryNotExistsException;
 
 /**
  * Class Cli
@@ -71,39 +72,27 @@ class Cli
         $this->alo->main_file = Str::of($this->arguments[1]);
         $this->alo->output = Str::of($this->arguments[2]);
 
+        if (! is_dir(realpath($this->alo->project_path->__toString()))) {
+            throw new DirectoryNotExistsException;
+        }
+        else {
+            $this->alo->project_path = Str::of(realpath($this->alo->project_path->__toString()));
+        }
+
         if (! $this->watch) {
             $this->alo->run();
         }
         else {
-            $tempDirectory = __DIR__ . DIRECTORY_SEPARATOR . ".." . DIRECTORY_SEPARATOR . "tmp";
-            if (! is_dir($tempDirectory)) {
-                mkdir($tempDirectory);
-            }
+            $cli = $this;
+            $watcher = new Watcher;
 
-            $hashFile = $tempDirectory . DIRECTORY_SEPARATOR . "last_directory_hash";
-            if (! file_exists($hashFile)) {
-                touch($hashFile);
-            }
+            $watcher->directory = $this->alo->project_path;
+            $watcher->sleep = 1;
+            $watcher->callback = function () use ($cli) {
+                $cli->alo->run();
+            };
 
-            print "\r\n[ Watching File Changes For Auto Compile ]\r\n";
-
-            while (true) {
-                $hash = Helpers::hashDirectory($this->alo->project_path);
-                if (file_get_contents($hashFile) != $hash) {
-                    print "Compiling...\r\n";
-
-                    try {
-                        $this->alo->run();
-                    }
-                    catch (Exception $exception) {
-                        print "[ ERR ] " . $exception->getCode() . ": " .$exception->getMessage() . "\r\n";
-                    }
-
-                    file_put_contents($hashFile, $hash);
-                }
-
-                sleep(0.5);
-            }
+            $watcher->run();
         }
 
         return $this;
