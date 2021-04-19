@@ -4,6 +4,7 @@
 namespace IsaEken\Alo;
 
 
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Illuminate\Support\Stringable;
 
@@ -54,5 +55,61 @@ class Helpers
         $message = Str::of("\033[32m[ " . date("H:i:s") . " ] \033[37m")->append($message);
         print $message->__toString() . "\r\n";
         return $message;
+    }
+
+    /**
+     * @param array|Collection $argv
+     * @return object
+     */
+    public static function formatArgv(array|Collection $argv): object
+    {
+        $arguments = $argv instanceof Collection ? $argv : collect($argv);
+        $options = new Collection;
+        $remove_arguments = collect();
+
+        foreach ($arguments as $key => $argument) {
+            if (Str::of($argument)->startsWith("--")) {
+                $options->add($argument);
+                $remove_arguments->add($key);
+            }
+        }
+
+        $args = $arguments->filter(fn ($argument, $key) => !in_array($key, $remove_arguments->toArray()));
+        $opts = new Collection;
+
+        foreach ($options as $option) {
+            $option = Str::of($option)->substr(2);
+            $key = null;
+
+            if ($option->contains("=")) {
+                $key = $option->before("=");
+                $option = $option->after("=");
+            }
+
+            if ($key instanceof Stringable) {
+                if ($option instanceof Stringable) {
+                    $opt = $option->lower()->trim()->replace(" ", null);
+                    if ($opt == "true") {
+                        $option = true;
+                    }
+                    else if ($opt == "false") {
+                        $option = false;
+                    }
+                }
+
+                $opts->put($key->__toString(), $option);
+            }
+            else if ($option instanceof Stringable) {
+                $opts->put($option->__toString(), null);
+            }
+            else {
+                $opts->add($option);
+            }
+        }
+
+        return (object) [
+            "arguments" => $args,
+            "options" => $opts,
+        ];
     }
 }

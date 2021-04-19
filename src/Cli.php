@@ -36,56 +36,6 @@ class Cli
     public bool $watch = false;
 
     /**
-     * @param array|Collection $argv
-     */
-    public function collectArgv(array|Collection $argv): void
-    {
-        $arguments = $argv instanceof Collection ? $argv : collect($argv);
-        $options = new Collection;
-        $remove_arguments = collect();
-
-        foreach ($arguments as $key => $argument) {
-            if (Str::of($argument)->startsWith("--")) {
-                $options->add($argument);
-                $remove_arguments->add($key);
-            }
-        }
-
-        $this->arguments = $arguments->filter(fn ($argument, $key) => !in_array($key, $remove_arguments->toArray()));
-        $this->options = new Collection;
-
-        foreach ($options as $option) {
-            $option = Str::of($option)->substr(2);
-            $key = null;
-
-            if ($option->contains("=")) {
-                $key = $option->before("=");
-                $option = $option->after("=");
-            }
-
-            if ($key instanceof Stringable) {
-                if ($option instanceof Stringable) {
-                    $opt = $option->lower()->trim()->replace(" ", null);
-                    if ($opt == "true") {
-                        $option = true;
-                    }
-                    else if ($opt == "false") {
-                        $option = false;
-                    }
-                }
-
-                $this->options->put($key->__toString(), $option);
-            }
-            else if ($option instanceof Stringable) {
-                $this->options->put($option->__toString(), null);
-            }
-            else {
-                $this->options->add($option);
-            }
-        }
-    }
-
-    /**
      * @param Alo $alo
      * @param array|Collection $argv
      * @return Cli
@@ -95,7 +45,10 @@ class Cli
     public function route(Alo $alo, array|Collection $argv): Cli
     {
         $this->alo = $alo;
-        $this->collectArgv($argv);
+
+        $argv = Helpers::formatArgv($argv);
+        $this->arguments = $argv->arguments;
+        $this->options = $argv->options;
 
         foreach ($this->options as $option => $value) {
             switch ($option) {
