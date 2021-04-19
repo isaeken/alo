@@ -112,4 +112,14 @@ class Helpers
             "options" => $opts,
         ];
     }
+
+    /**
+     * Check script is running in CLI.
+     *
+     * @return bool
+     */
+    public static function is_cli(): bool
+    {
+        return php_sapi_name() == "cli";
+    }
 }
