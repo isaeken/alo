@@ -21,24 +21,24 @@ class Alo
     public bool $auto_merge_requires = true;
 
     /**
-     * @var Stringable $project_path
+     * @var string|Stringable $project_path
      */
-    public Stringable $project_path;
+    public string|Stringable $project_path;
 
     /**
-     * @var Stringable $main_file
+     * @var string|Stringable $main_file
      */
-    public Stringable $main_file;
+    public string|Stringable $main_file;
 
     /**
-     * @var Stringable $output
+     * @var string|Stringable $output
      */
-    public Stringable $output;
+    public string|Stringable $output;
 
     /**
-     * @var Stringable $contents
+     * @var string|Stringable $contents
      */
-    public Stringable $contents;
+    public string|Stringable $contents;
 
     /**
      * @throws DirectoryNotExistsException
@@ -46,6 +46,22 @@ class Alo
      */
     public function run()
     {
+        if ($this->project_path !== null && !$this->project_path instanceof Stringable) {
+            $this->project_path = Str::of($this->project_path);
+        }
+
+        if ($this->main_file !== null && !$this->main_file instanceof Stringable) {
+            $this->main_file = Str::of($this->main_file);
+        }
+
+        if ($this->output !== null && !$this->output instanceof Stringable) {
+            $this->output = Str::of($this->output);
+        }
+
+        if ($this->contents !== null && !$this->contents instanceof Stringable) {
+            $this->contents = Str::of($this->contents);
+        }
+
         if (! is_dir(realpath($this->project_path->__toString()))) {
             throw new DirectoryNotExistsException;
         }
