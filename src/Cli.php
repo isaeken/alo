@@ -129,10 +129,6 @@ class Cli
 
         foreach ($this->options as $option => $value) {
             switch ($option) {
-                case "auto-merge-requires":
-                    $this->alo->auto_merge_requires = $value === null || ($value instanceof Stringable && $value->length() < 1) || $value;
-                    break;
-
                 case "watch":
                     $this->watch = $value === null || ($value instanceof Stringable && $value->length() < 1) || $value;
                     break;

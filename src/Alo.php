@@ -16,11 +16,6 @@ use IsaEken\Alo\Exceptions\FileNotExistsException;
 class Alo
 {
     /**
-     * @var bool $auto_merge_requires
-     */
-    public bool $auto_merge_requires = true;
-
-    /**
      * @var string|Stringable $project_path
      */
     public string|Stringable $project_path;
@@ -58,10 +53,6 @@ class Alo
             $this->output = Str::of($this->output);
         }
 
-        if ($this->contents !== null && !$this->contents instanceof Stringable) {
-            $this->contents = Str::of($this->contents);
-        }
-
         if (! is_dir(realpath($this->project_path->__toString()))) {
             throw new DirectoryNotExistsException;
         }
@@ -79,10 +70,7 @@ class Alo
         }
 
         $this->contents = Str::of(file_get_contents($this->main_file));
-
-        if ($this->auto_merge_requires) {
-            $this->contents = (new Merger($this))->merge()->contents;
-        }
+        $this->contents = (new Merger($this))->merge()->contents;
 
         file_put_contents($this->output, $this->contents);
     }
