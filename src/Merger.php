@@ -77,7 +77,12 @@ class Merger
                         ->replace("\\", "\\\\");
 
                     chdir($current_file_path->beforeLast(DIRECTORY_SEPARATOR));
-                    $path = realpath(eval("return $path;"));
+                    if (realpath(eval("return $path;")) === false) {
+                        $path = realpath(eval("return getcwd() . DIRECTORY_SEPARATOR . $path;"));
+                    }
+                    else {
+                        $path = realpath(eval("return $path;"));
+                    }
                     chdir($cwd);
 
                     if (! file_exists($path)) {

@@ -42,8 +42,11 @@ class Alo
      */
     public function run()
     {
-        if (! is_dir($this->project_path->__toString())) {
+        if (! is_dir(realpath($this->project_path->__toString()))) {
             throw new DirectoryNotExistsException;
+        }
+        else {
+            $this->project_path = Str::of(realpath($this->project_path->__toString()));
         }
 
         if (! file_exists($this->main_file)) {
