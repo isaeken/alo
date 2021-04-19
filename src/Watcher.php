@@ -64,6 +64,10 @@ class Watcher
         if (! file_exists($this->temp_file)) {
             touch($this->temp_file);
         }
+
+        if (Helpers::is_cli()) {
+            Helpers::output("Watcher initialized.");
+        }
     }
 
     /**
@@ -71,6 +75,10 @@ class Watcher
      */
     public function run(): void
     {
+        if (Helpers::is_cli()) {
+            Helpers::output("Watcher started.");
+        }
+
         while ($this->active) {
             $hash = Helpers::hashDirectory($this->directory);
 
@@ -79,7 +87,9 @@ class Watcher
                     $this->callback->call($this);
                 }
                 catch (Exception $exception) {
-
+                    if (Helpers::is_cli()) {
+                        Helpers::output("ERR: " . $exception->getCode() . ": " . $exception->getMessage());
+                    }
                 }
 
                 file_put_contents($this->temp_file, $hash);
@@ -96,6 +106,10 @@ class Watcher
      */
     public function stop(): Watcher
     {
+        if (Helpers::is_cli()) {
+            Helpers::output("Watcher stopped.");
+        }
+
         $this->active = false;
         return $this;
     }

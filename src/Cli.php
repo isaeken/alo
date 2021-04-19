@@ -89,6 +89,10 @@ class Cli
             $watcher->directory = $this->alo->project_path;
             $watcher->sleep = 1;
             $watcher->callback = function () use ($cli) {
+                if (Helpers::is_cli()) {
+                    Helpers::output("Compiling...");
+                }
+
                 $cli->alo->run();
             };
 
