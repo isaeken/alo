@@ -44,4 +44,15 @@ class Helpers
         $dir->close();
         return Str::of(md5(implode("", $hash->toArray())));
     }
+
+    /**
+     * @param string|Stringable $message
+     * @return Stringable
+     */
+    public static function output(string|Stringable $message): Stringable
+    {
+        $message = Str::of("\033[32m[ " . date("H:i:s") . " ] \033[37m")->append($message);
+        print $message->__toString() . "\r\n";
+        return $message;
+    }
 }
